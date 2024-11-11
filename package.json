@@ -9,7 +9,7 @@
   "scripts": {
     "fmt": "prettier . --write",
     "prepack": "npm run compile",
-    "compile": "tsc -p tsconfig.json",
+    "compile": "tsc",
     "watch": "tsc --watch --sourceMap --preserveWatchOutput",
     "test": "cross-env mocha --import=tsx -u tdd \"src/test/**/*.test.{ts,tsx}\"",
     "prettier": "prettier --list-different --write --cache ."

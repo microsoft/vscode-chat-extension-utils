@@ -16,15 +16,35 @@ export interface AdHocChatTool extends vscode.LanguageModelChatTool {
 // export function streamPatternMatcher(textStream: AsyncIterable<string>, pattern: RegExp): AsyncIterable<{ text: string } | { match: RegExpMatchArray }>;
 
 export interface ChatHandlerOptions {
+    /**
+     * Instructions/"personality" for the chat participant prompt. This is what makes this chat participant different from others.
+     */
     prompt: string | PromptElement;
+
+    /**
+     * If not specified, the user-selected model on ChatRequest will be used.
+     */
     model?: vscode.LanguageModelChat;
+
+    /**
+     * An optional list of tools to use for this request.
+     */
     tools?: ReadonlyArray<vscode.LanguageModelChatTool | AdHocChatTool>;
+
+    /**
+     * See {@link vscode.LanguageModelChatRequestOptions.justification}
+     */
     requestJustification?: string;
 
     /**
-     * If this is included, references will be returned
+     * sendChatParticipantRequest returns a response stream, and the caller can handle streaming the response,
+     * or use this option to enable sendChatParticipantRequest to stream the response back to VS Code.
      */
-    responseStream?: vscode.ChatResponseStream
+    responseStreamOptions?: {
+        stream: vscode.ChatResponseStream;
+        references?: boolean;
+        responseText?: boolean;
+    }
 }
 
 export interface ChatHandlerResult {
@@ -76,8 +96,9 @@ async function _sendChatParticipantRequest(stream: AsyncIterableSource<vscode.La
     let messages = result.messages;
     result.references.forEach(ref => {
         if (ref.anchor instanceof vscode.Uri || ref.anchor instanceof vscode.Location) {
-            // TODO do this?
-            options.responseStream?.reference(ref.anchor);
+            if (options.responseStreamOptions?.references) {
+                options.responseStreamOptions?.stream.reference(ref.anchor);
+            }
         }
     });
 
@@ -105,6 +126,10 @@ async function _sendChatParticipantRequest(stream: AsyncIterableSource<vscode.La
             if (part instanceof vscode.LanguageModelTextPart) {
                 stream.emitOne(part);
                 responseStr += part.value;
+
+                if (options.responseStreamOptions?.responseText) {
+                    options.responseStreamOptions.stream.markdown(part.value);
+                }
             } else if (part instanceof vscode.LanguageModelToolCallPart) {
                 toolCalls.push(part);
             }
