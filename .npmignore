@@ -1,0 +1,15 @@
+src/
+build/
+.vscode/
+.gitignore
+.prettierignore
+.prettierrc.json
+.vscode-test.mjs
+.vscode-test/
+*.tgz
+tsconfig.json
+*.md
+dist/base/test/
+*.map
+dist/base/tokenizer/cl100kBaseTokenizer*.*
+dist/base/tokenizer/cl100k_base.tiktoken
