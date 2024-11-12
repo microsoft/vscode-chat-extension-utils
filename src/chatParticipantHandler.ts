@@ -8,7 +8,7 @@ import { ToolCallRound, ToolResultMetadata, ToolUserPrompt, TsxToolUserMetadata 
 import { AsyncIterableSource } from './util/vs/base/common/async';
 
 export interface AdHocChatTool extends vscode.LanguageModelChatTool {
-    run(): string;
+	run(): string;
 }
 
 // export function replacePattern(textStream: AsyncIterable<string>, pattern: RegExp, replacement: string): AsyncIterable<string>;
@@ -16,40 +16,40 @@ export interface AdHocChatTool extends vscode.LanguageModelChatTool {
 // export function streamPatternMatcher(textStream: AsyncIterable<string>, pattern: RegExp): AsyncIterable<{ text: string } | { match: RegExpMatchArray }>;
 
 export interface ChatHandlerOptions {
-    /**
-     * Instructions/"personality" for the chat participant prompt. This is what makes this chat participant different from others.
-     */
-    prompt: string | PromptElement;
+	/**
+	 * Instructions/"personality" for the chat participant prompt. This is what makes this chat participant different from others.
+	 */
+	prompt: string | PromptElement;
 
-    /**
-     * If not specified, the user-selected model on ChatRequest will be used.
-     */
-    model?: vscode.LanguageModelChat;
+	/**
+	 * If not specified, the user-selected model on ChatRequest will be used.
+	 */
+	model?: vscode.LanguageModelChat;
 
-    /**
-     * An optional list of tools to use for this request.
-     */
-    tools?: ReadonlyArray<vscode.LanguageModelChatTool | AdHocChatTool>;
+	/**
+	 * An optional list of tools to use for this request.
+	 */
+	tools?: ReadonlyArray<vscode.LanguageModelChatTool | AdHocChatTool>;
 
-    /**
-     * See {@link vscode.LanguageModelChatRequestOptions.justification}
-     */
-    requestJustification?: string;
+	/**
+	 * See {@link vscode.LanguageModelChatRequestOptions.justification}
+	 */
+	requestJustification?: string;
 
-    /**
-     * sendChatParticipantRequest returns a response stream, and the caller can handle streaming the response,
-     * or use this option to enable sendChatParticipantRequest to stream the response back to VS Code.
-     */
-    responseStreamOptions?: {
-        stream: vscode.ChatResponseStream;
-        references?: boolean;
-        responseText?: boolean;
-    };
+	/**
+	 * sendChatParticipantRequest returns a response stream, and the caller can handle streaming the response,
+	 * or use this option to enable sendChatParticipantRequest to stream the response back to VS Code.
+	 */
+	responseStreamOptions?: {
+		stream: vscode.ChatResponseStream;
+		references?: boolean;
+		responseText?: boolean;
+	};
 }
 
 export interface ChatHandlerResult {
-    result: Promise<vscode.ChatResult>;
-    stream: AsyncIterable<vscode.LanguageModelTextPart | vscode.LanguageModelToolResult>;
+	result: Promise<vscode.ChatResult>;
+	stream: AsyncIterable<vscode.LanguageModelTextPart | vscode.LanguageModelToolResult>;
 }
 
 /**
@@ -154,7 +154,7 @@ async function _sendChatParticipantRequest(stream: AsyncIterableSource<vscode.La
 				{ modelMaxPromptTokens: model.maxInputTokens },
 				model));
 			messages = result.messages;
-			const toolResultMetadata = result.metadatas.getAll(ToolResultMetadata);
+			const toolResultMetadata = result.metadata.getAll(ToolResultMetadata);
 			if (toolResultMetadata?.length) {
 				// Cache tool results for later, so they can be incorporated into later prompts without calling the tool again
 				toolResultMetadata.forEach(meta => accumulatedToolResults[meta.toolCallId] = meta.result);
