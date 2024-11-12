@@ -9,9 +9,10 @@
   "scripts": {
     "fmt": "prettier . --write",
     "prepack": "npm run compile",
+    "lint": "eslint src",
     "compile": "tsc",
     "watch": "tsc --watch --sourceMap --preserveWatchOutput",
-    "test": "cross-env mocha --import=tsx -u tdd \"src/test/**/*.test.{ts,tsx}\"",
+    "test": "vscode-test",
     "prettier": "prettier --list-different --write --cache ."
   },
   "bugs": {
@@ -26,13 +27,19 @@
     "@vscode/prompt-tsx": "^0.3.0-alpha.13"
   },
   "devDependencies": {
+    "@stylistic/eslint-plugin-ts": "^2.10.1",
     "@types/mocha": "^10.0.9",
     "@types/node": "^22.9.0",
     "@types/vscode": "^1.95.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
     "cross-env": "^7.0.3",
+    "eslint": "^9.14.0",
+    "eslint-plugin-header": "^3.1.1",
     "mocha": "^10.8.2",
     "prettier": "^3.3.3",
     "tsx": "^4.19.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.14.0"
   }
 }

@@ -2,6 +2,5 @@ dist/**
 .vscode/**
 .vscode-test/**
 .git-blame-ignore-revs
-**/*.js
 SECURITY.md
 SUPPORT.md
