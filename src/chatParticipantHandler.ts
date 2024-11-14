@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation and GitHub. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
-import { PromptElement, renderPrompt } from '@vscode/prompt-tsx';
+import { renderPrompt } from '@vscode/prompt-tsx';
 import * as vscode from 'vscode';
 import { ToolCallRound, ToolResultMetadata, ToolUserPrompt, TsxToolUserMetadata } from './toolsPrompt';
 import { AsyncIterableSource } from './util/vs/base/common/async';
@@ -19,7 +19,7 @@ export interface ChatHandlerOptions {
 	/**
 	 * Instructions/"personality" for the chat participant prompt. This is what makes this chat participant different from others.
 	 */
-	prompt: string | PromptElement;
+	prompt?: string;
 
 	/**
 	 * If not specified, the user-selected model on ChatRequest will be used.
