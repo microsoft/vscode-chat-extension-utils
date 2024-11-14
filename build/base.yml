@@ -15,7 +15,7 @@ resources:
 
 parameters:
   - name: publishPackage
-    displayName: 🚀 Publish @vscode/chat-lib
+    displayName: 🚀 Publish @vscode/chat-extension-utils
     type: boolean
     default: false
 
@@ -23,7 +23,7 @@ extends:
   template: azure-pipelines/npm-package/pipeline.yml@templates
   parameters:
     npmPackages:
-      - name: chat-lib
+      - name: chat-extension-utils
 
         buildSteps:
           - script: npm ci

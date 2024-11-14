@@ -1,5 +1,5 @@
 {
-  "name": "@vscode/chat-lib",
+  "name": "@vscode/chat-extension-utils",
   "description": "A library for implementing VS Code chat participant extensions.",
   "version": "0.0.0-alpha.1",
   "author": "Microsoft Corporation",
@@ -16,13 +16,13 @@
     "prettier": "prettier --list-different --write --cache ."
   },
   "bugs": {
-    "url": "https://github.com/microsoft/vscode-chat-lib/issues"
+    "url": "https://github.com/microsoft/vscode-chat-extension-utils/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/microsoft/vscode-chat-lib.git"
+    "url": "git+https://github.com/microsoft/vscode-chat-extension-utils.git"
   },
-  "homepage": "https://github.com/microsoft/vscode-chat-lib#readme",
+  "homepage": "https://github.com/microsoft/vscode-chat-extension-utils#readme",
   "dependencies": {
     "@vscode/prompt-tsx": "^0.3.0-alpha.13"
   },
