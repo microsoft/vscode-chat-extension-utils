@@ -1,6 +1,6 @@
 # @vscode/chat-extension-utils
 
-This extension helps you build chat extensions for Visual Studio Code. See our [chat extension guide](https://code.visualstudio.com/api/extension-guides/chat-extensions) for more information.
+This extension helps you build chat extensions for Visual Studio Code. See our [chat extension guide](https://code.visualstudio.com/api/extension-guides/chat) for more information.
 
 ## Links
 
@@ -21,7 +21,7 @@ It's possible to build a chat extension, like any other VS Code extension, by wo
 
 ## Usage
 
-- See the [chat extension guide](https://code.visualstudio.com/api/extension-guides/chat-extensions) for an overview of chat extensions in general. This library helps you with the implementation of a chat participant, but your extension will still do the basic registration and setup of a chat participant.
+- See the [chat extension guide](https://code.visualstudio.com/api/extension-guides/chat) for an overview of chat extensions in general. This library helps you with the implementation of a chat participant, but your extension will still do the basic registration and setup of a chat participant.
 - From inside your `ChatRequestHandler`, call `sendChatParticipantRequest` with your desired options, and return the result. It's important to return the `ChatResult` from the handler, because it may contain error message details or tool calling metadata.
 
 ```ts
