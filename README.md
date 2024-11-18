@@ -1,33 +1,85 @@
-# Project
+# @vscode/chat-extension-utils
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+This extension helps you build chat extensions for Visual Studio Code. See our [chat extension guide](https://code.visualstudio.com/api/extension-guides/chat-extensions) for more information.
 
-As the maintainer of this project, please make a few updates:
+## Links
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+- [Chat extension sample](https://github.com/microsoft/vscode-extension-samples/tree/main/chat-sample)
+- [ChatParticipant API](https://code.visualstudio.com/api/references/vscode-api#chat)
 
-## Contributing
+## Why use this library?
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+It's possible to build a chat extension, like any other VS Code extension, by working with VS Code API directly without using this library. The chat extension sample includes examples of chat participants that are built this way. But we've found that working with LLMs and building high-quality chat extensions is inherently complex. This is an opinionated library that aims to make it as easy as possible to get a high-quality chat participant up and running by taking over several aspects that you would otherwise have to implement yourself:
 
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+- The LLM tool calling loop
+- The overall prompt crafting, including:
+    - Chat history
+    - References that the user attached, for the current prompt and messages in history
+    - Tool calls for the current turn and messages in history
+- Streaming the chat response back to VS Code- text and used references
+- Picking a chat model and sending the request
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+## Usage
 
-## Trademarks
+- See the [chat extension guide](https://code.visualstudio.com/api/extension-guides/chat-extensions) for an overview of chat extensions in general. This library helps you with the implementation of a chat participant, but your extension will still do the basic registration and setup of a chat participant.
+- From inside your `ChatRequestHandler`, call `sendChatParticipantRequest` with your desired options, and return the result. It's important to return the `ChatResult` from the handler, because it may contain error message details or tool calling metadata.
 
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
-trademarks or logos is subject to and must follow 
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.
+```ts
+const handler: vscode.ChatRequestHandler = async (request: vscode.ChatRequest, chatContext: vscode.ChatContext, stream: vscode.ChatResponseStream, token: vscode.CancellationToken) => {
+    const libResult = chatUtils.sendChatParticipantRequest(
+        request,
+        chatContext,
+        {
+            prompt: 'You are a cat! Answer as a cat.',
+            responseStreamOptions: {
+                stream,
+                references: true,
+                responseText: true
+            },
+            tools: vscode.lm.tools.filter(tool => tool.tags.includes('chat-tools-sample'))
+        },
+        token);
+
+    return await libResult.result;
+};
+
+const myParticipant = vscode.chat.createChatParticipant('chat-tools-sample.catTools', handler);
+// assign myParticipant.iconPath or other properties here
+context.subscriptions.push(myParticipant);
+```
+
+Here are the options that you can pass to `sendChatParticipantRequest`:
+
+```ts
+export interface ChatHandlerOptions {
+	/**
+	 * Instructions/"personality" for the chat participant prompt. This is what makes this chat participant different from others.
+	 */
+	prompt?: string;
+
+	/**
+	 * If not specified, the user-selected model on ChatRequest will be used.
+	 */
+	model?: vscode.LanguageModelChat;
+
+	/**
+	 * An optional list of tools to use for this request.
+	 */
+	tools?: ReadonlyArray<vscode.LanguageModelChatTool | AdHocChatTool>;
+
+	/**
+	 * See {@link vscode.LanguageModelChatRequestOptions.justification}
+	 */
+	requestJustification?: string;
+
+	/**
+	 * sendChatParticipantRequest returns a response stream, and the caller can handle streaming the response,
+	 * or use this option to enable sendChatParticipantRequest to stream the response back to VS Code.
+	 */
+	responseStreamOptions?: {
+		stream: vscode.ChatResponseStream;
+		references?: boolean;
+		responseText?: boolean;
+	};
+}
+```

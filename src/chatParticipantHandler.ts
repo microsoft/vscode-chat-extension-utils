@@ -15,6 +15,7 @@ export interface AdHocChatTool extends vscode.LanguageModelChatTool {
 // export function handlePattern(textStream: AsyncIterable<string>, pattern: RegExp, patternHandler: (match: string) => void): AsyncIterable<string>;
 // export function streamPatternMatcher(textStream: AsyncIterable<string>, pattern: RegExp): AsyncIterable<{ text: string } | { match: RegExpMatchArray }>;
 
+// ❗ This needs to be updated in README when changing.
 export interface ChatHandlerOptions {
 	/**
 	 * Instructions/"personality" for the chat participant prompt. This is what makes this chat participant different from others.
