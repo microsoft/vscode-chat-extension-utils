@@ -4,3 +4,4 @@ dist/**
 .git-blame-ignore-revs
 SECURITY.md
 SUPPORT.md
+*.md
