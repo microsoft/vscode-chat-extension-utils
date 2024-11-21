@@ -4,12 +4,8 @@
 
 import { renderPrompt } from '@vscode/prompt-tsx';
 import * as vscode from 'vscode';
-import { ToolCallRound, ToolResultMetadata, ToolUserPrompt, TsxToolUserMetadata } from './toolsPrompt';
+import { AdHocChatTool, ToolCallRound, ToolResultMetadata, ToolUserPrompt, TsxToolUserMetadata } from './toolsPrompt';
 import { AsyncIterableSource } from './util/vs/base/common/async';
-
-export interface AdHocChatTool extends vscode.LanguageModelChatTool {
-	run(): string;
-}
 
 // export function replacePattern(textStream: AsyncIterable<string>, pattern: RegExp, replacement: string): AsyncIterable<string>;
 // export function handlePattern(textStream: AsyncIterable<string>, pattern: RegExp, patternHandler: (match: string) => void): AsyncIterable<string>;
@@ -30,7 +26,7 @@ export interface ChatHandlerOptions {
 	/**
 	 * An optional list of tools to use for this request.
 	 */
-	tools?: ReadonlyArray<vscode.LanguageModelChatTool | AdHocChatTool>;
+	tools?: ReadonlyArray<vscode.LanguageModelChatTool | AdHocChatTool<object>>;
 
 	/**
 	 * See {@link vscode.LanguageModelChatRequestOptions.justification}
@@ -90,7 +86,8 @@ async function _sendChatParticipantRequest(stream: AsyncIterableSource<vscode.La
 			request,
 			toolCallRounds: [],
 			toolCallResults: {},
-			libUserPrompt: options.prompt
+			libUserPrompt: options.prompt,
+			tools
 		},
 		{ modelMaxPromptTokens: model.maxInputTokens },
 		model);
@@ -150,7 +147,8 @@ async function _sendChatParticipantRequest(stream: AsyncIterableSource<vscode.La
 					request,
 					toolCallRounds,
 					toolCallResults: accumulatedToolResults,
-					libUserPrompt: options.prompt
+					libUserPrompt: options.prompt,
+					tools
 				},
 				{ modelMaxPromptTokens: model.maxInputTokens },
 				model));
