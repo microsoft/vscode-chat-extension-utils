@@ -25,12 +25,17 @@ export interface ToolCallRound {
 	toolCalls: vscode.LanguageModelToolCallPart[];
 }
 
+export interface AdHocChatTool<T> extends vscode.LanguageModelChatTool {
+	invoke(options: vscode.LanguageModelToolInvocationOptions<T>): Promise<vscode.LanguageModelToolResult>;
+}
+
 export interface ToolUserProps extends BasePromptElementProps {
 	request: vscode.ChatRequest;
 	context: vscode.ChatContext;
 	toolCallRounds: ToolCallRound[];
 	toolCallResults: Record<string, vscode.LanguageModelToolResult>;
 	libUserPrompt?: string;
+	tools?: ReadonlyArray<vscode.LanguageModelChatTool | AdHocChatTool<object>>;
 }
 
 export class ToolUserPrompt extends PromptElement<ToolUserProps, void> {
@@ -63,7 +68,8 @@ export class ToolUserPrompt extends PromptElement<ToolUserProps, void> {
 				<ToolCalls
 					toolCallRounds={this.props.toolCallRounds}
 					toolInvocationToken={this.props.request.toolInvocationToken}
-					toolCallResults={this.props.toolCallResults} />
+					toolCallResults={this.props.toolCallResults}
+					tools={this.props.tools} />
 			</>
 		);
 	}
@@ -73,6 +79,7 @@ interface ToolCallsProps extends BasePromptElementProps {
 	toolCallRounds: ToolCallRound[];
 	toolCallResults: Record<string, vscode.LanguageModelToolResult>;
 	toolInvocationToken: vscode.ChatParticipantToolToken | undefined;
+	tools?: ReadonlyArray<vscode.LanguageModelChatTool | AdHocChatTool<object>>;
 }
 
 const dummyCancellationToken: vscode.CancellationToken = new vscode.CancellationTokenSource().token;
@@ -99,7 +106,11 @@ class ToolCalls extends PromptElement<ToolCallsProps, void> {
 			<Chunk>
 				<AssistantMessage toolCalls={assistantToolCalls}>{round.response}</AssistantMessage>
 				{round.toolCalls.map(toolCall =>
-					<ToolResultElement toolCall={toolCall} toolInvocationToken={this.props.toolInvocationToken} toolCallResult={this.props.toolCallResults[toolCall.callId]} />)}
+					<ToolResultElement
+						toolCall={toolCall}
+						toolInvocationToken={this.props.toolInvocationToken}
+						toolCallResult={this.props.toolCallResults[toolCall.callId]}
+						tools={this.props.tools} />)}
 			</Chunk>);
 	}
 }
@@ -108,6 +119,7 @@ interface ToolResultElementProps extends BasePromptElementProps {
 	toolCall: vscode.LanguageModelToolCallPart;
 	toolInvocationToken: vscode.ChatParticipantToolToken | undefined;
 	toolCallResult: vscode.LanguageModelToolResult | undefined;
+	tools?: ReadonlyArray<vscode.LanguageModelChatTool | AdHocChatTool<object>>;
 }
 
 /**
@@ -115,19 +127,29 @@ interface ToolResultElementProps extends BasePromptElementProps {
  */
 class ToolResultElement extends PromptElement<ToolResultElementProps, void> {
 	async render(state: void, sizing: PromptSizing): Promise<PromptPiece | undefined> {
-		const tool = vscode.lm.tools.find(t => t.name === this.props.toolCall.name);
-		if (!tool) {
-			console.error(`Tool not found: ${this.props.toolCall.name}`);
-			return <ToolMessage toolCallId={this.props.toolCall.callId}>Tool not found</ToolMessage>;
-		}
-
 		const tokenizationOptions: vscode.LanguageModelToolTokenizationOptions = {
 			tokenBudget: sizing.tokenBudget,
 			countTokens: async (content: string) => sizing.countTokens(content),
 		};
 
-		const toolResult = this.props.toolCallResult ??
-			await vscode.lm.invokeTool(this.props.toolCall.name, { input: this.props.toolCall.input, toolInvocationToken: this.props.toolInvocationToken, tokenizationOptions }, dummyCancellationToken);
+		const options: vscode.LanguageModelToolInvocationOptions<object> = {
+			input: this.props.toolCall.input,
+			toolInvocationToken: this.props.toolInvocationToken,
+			tokenizationOptions
+		};
+		let toolResult = this.props.toolCallResult;
+		if (!toolResult) {
+			// If the tool call is from a toolReference, it may not be in the set of provided tools
+			const tool: vscode.LanguageModelChatTool | AdHocChatTool<object> | undefined = this.props.tools?.find(t => t.name === this.props.toolCall.name) ??
+				vscode.lm.tools.find(t => t.name === this.props.toolCall.name);
+			if (!tool) {
+				console.error(`Tool not found: ${this.props.toolCall.name}`);
+				return <ToolMessage toolCallId={this.props.toolCall.callId}>Tool not found</ToolMessage>;
+			}
+
+			toolResult = isAdHocTool(tool) ? await tool.invoke(options) :
+				await vscode.lm.invokeTool(tool.name, options, dummyCancellationToken);
+		}
 
 		return (
 			<ToolMessage toolCallId={this.props.toolCall.callId}>
@@ -170,7 +192,10 @@ class History extends PromptElement<HistoryProps, void> {
 					} else if (message instanceof vscode.ChatResponseTurn) {
 						const metadata = message.result.metadata;
 						if (isTsxToolUserMetadata(metadata) && metadata.toolCallsMetadata.toolCallRounds.length > 0) {
-							return <ToolCalls toolCallResults={metadata.toolCallsMetadata.toolCallResults} toolCallRounds={metadata.toolCallsMetadata.toolCallRounds} toolInvocationToken={undefined} />;
+							return <ToolCalls
+								toolCallResults={metadata.toolCallsMetadata.toolCallResults}
+								toolCallRounds={metadata.toolCallsMetadata.toolCallRounds}
+								toolInvocationToken={undefined} />;
 						}
 
 						return <AssistantMessage>{chatResponseToString(message)}</AssistantMessage>;
@@ -301,4 +326,8 @@ export function isTsxToolUserMetadata(obj: unknown): obj is TsxToolUserMetadata 
 	return !!obj &&
 		!!(obj as TsxToolUserMetadata).toolCallsMetadata &&
 		Array.isArray((obj as TsxToolUserMetadata).toolCallsMetadata.toolCallRounds);
+}
+
+export function isAdHocTool(tool: vscode.LanguageModelChatTool | AdHocChatTool<object>): tool is AdHocChatTool<object> {
+	return (tool as AdHocChatTool<object>).invoke !== undefined;
 }
