@@ -2,9 +2,9 @@
  *  Copyright (c) Microsoft Corporation and GitHub. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
-import { renderPrompt } from '@vscode/prompt-tsx';
+import { PromptElement, renderPrompt } from '@vscode/prompt-tsx';
 import * as vscode from 'vscode';
-import { AdHocChatTool, ToolCallRound, ToolResultMetadata, ToolUserPrompt, TsxToolUserMetadata } from './toolsPrompt';
+import { AdHocChatTool, PromptElementAndProps, ToolCallRound, ToolResultMetadata, ToolUserPrompt, TsxToolUserMetadata } from './toolsPrompt';
 import { AsyncIterableSource } from './util/vs/base/common/async';
 
 // export function replacePattern(textStream: AsyncIterable<string>, pattern: RegExp, replacement: string): AsyncIterable<string>;
@@ -12,11 +12,11 @@ import { AsyncIterableSource } from './util/vs/base/common/async';
 // export function streamPatternMatcher(textStream: AsyncIterable<string>, pattern: RegExp): AsyncIterable<{ text: string } | { match: RegExpMatchArray }>;
 
 // ❗ This needs to be updated in README when changing.
-export interface ChatHandlerOptions {
+export interface ChatHandlerOptions<T extends PromptElement = PromptElement> {
 	/**
 	 * Instructions/"personality" for the chat participant prompt. This is what makes this chat participant different from others.
 	 */
-	prompt?: string;
+	prompt?: string | PromptElementAndProps<T>;
 
 	/**
 	 * If not specified, the user-selected model on ChatRequest will be used.
@@ -54,7 +54,9 @@ export interface ChatHandlerResult {
  */
 export function sendChatParticipantRequest(request: vscode.ChatRequest, context: vscode.ChatContext, options: ChatHandlerOptions, token: vscode.CancellationToken): ChatHandlerResult {
 	const stream = new AsyncIterableSource<vscode.LanguageModelTextPart | vscode.LanguageModelToolResult>();
-	const resultPromise = _sendChatParticipantRequest(stream, request, context, options, token);
+	const resultPromise = _sendChatParticipantRequest(stream, request, context, options, token)
+		.finally(() => stream.resolve());
+
 	return {
 		result: resultPromise,
 		stream: stream.asyncIterable,
@@ -166,7 +168,6 @@ async function _sendChatParticipantRequest(stream: AsyncIterableSource<vscode.La
 
 	await runWithTools();
 
-	stream.resolve();
 	return {
 		metadata: {
 			// Return tool call metadata so it can be used in prompt history on the next request
