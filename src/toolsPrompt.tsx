@@ -8,6 +8,7 @@ import {
 	Chunk,
 	PrioritizedList,
 	PromptElement,
+	PromptElementCtor,
 	PromptElementProps,
 	PromptMetadata,
 	PromptPiece,
@@ -34,8 +35,13 @@ export interface ToolUserProps extends BasePromptElementProps {
 	context: vscode.ChatContext;
 	toolCallRounds: ToolCallRound[];
 	toolCallResults: Record<string, vscode.LanguageModelToolResult>;
-	libUserPrompt?: string;
+	libUserPrompt?: string | PromptElementAndProps<any>;
 	tools?: ReadonlyArray<vscode.LanguageModelChatTool | AdHocChatTool<object>>;
+}
+
+export interface PromptElementAndProps<T extends BasePromptElementProps> {
+	promptElement: PromptElementCtor<T, void>;
+	props?: T;
 }
 
 export class ToolUserPrompt extends PromptElement<ToolUserProps, void> {
@@ -56,7 +62,6 @@ export class ToolUserPrompt extends PromptElement<ToolUserProps, void> {
 						- Don't make assumptions about the situation- gather context first, then
 						perform the task or answer the question. <br />
 						- Don't ask the user for confirmation to use tools, just use them. <br />
-						{this.props.libUserPrompt}
 					</Tag>
 				</UserMessage>
 				<History context={this.props.context} priority={10} />
@@ -64,6 +69,7 @@ export class ToolUserPrompt extends PromptElement<ToolUserProps, void> {
 					references={this.props.request.references}
 					priority={20}
 				/>
+				{this.renderLibUserPrompt(this.props.libUserPrompt)}
 				<UserMessage>{this.props.request.prompt}</UserMessage>
 				<ToolCalls
 					toolCallRounds={this.props.toolCallRounds}
@@ -72,6 +78,17 @@ export class ToolUserPrompt extends PromptElement<ToolUserProps, void> {
 					tools={this.props.tools} />
 			</>
 		);
+	}
+
+	private renderLibUserPrompt(libUserPrompt: string | PromptElementAndProps<any> | undefined) {
+		if (typeof libUserPrompt === 'string') {
+			return <UserMessage>{libUserPrompt}</UserMessage>;
+		} else if (libUserPrompt) {
+			const PromptElement = libUserPrompt.promptElement;
+			return <>
+				<PromptElement {...libUserPrompt.props} />
+			</>;
+		}
 	}
 }
 

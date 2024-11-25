@@ -13,3 +13,4 @@ dist/base/test/
 *.map
 dist/base/tokenizer/cl100kBaseTokenizer*.*
 dist/base/tokenizer/cl100k_base.tiktoken
+dist/promptTsx*
