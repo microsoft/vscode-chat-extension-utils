@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation and GitHub. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
-import { BasePromptElementProps, renderPrompt } from '@vscode/prompt-tsx';
+import { PromptElement, renderPrompt } from '@vscode/prompt-tsx';
 import * as vscode from 'vscode';
 import { AdHocChatTool, PromptElementAndProps, ToolCallRound, ToolResultMetadata, ToolUserPrompt, TsxToolUserMetadata } from './toolsPrompt';
 import { AsyncIterableSource } from './util/vs/base/common/async';
@@ -12,7 +12,7 @@ import { AsyncIterableSource } from './util/vs/base/common/async';
 // export function streamPatternMatcher(textStream: AsyncIterable<string>, pattern: RegExp): AsyncIterable<{ text: string } | { match: RegExpMatchArray }>;
 
 // ❗ This needs to be updated in README when changing.
-export interface ChatHandlerOptions<T extends BasePromptElementProps = BasePromptElementProps> {
+export interface ChatHandlerOptions<T extends PromptElement = PromptElement> {
 	/**
 	 * Instructions/"personality" for the chat participant prompt. This is what makes this chat participant different from others.
 	 */

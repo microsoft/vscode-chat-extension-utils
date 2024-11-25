@@ -39,9 +39,11 @@ export interface ToolUserProps extends BasePromptElementProps {
 	tools?: ReadonlyArray<vscode.LanguageModelChatTool | AdHocChatTool<object>>;
 }
 
-export interface PromptElementAndProps<T extends BasePromptElementProps> {
-	promptElement: PromptElementCtor<T, void>;
-	props?: T;
+type InferProps<T> = T extends PromptElement<infer P, void> ? P : never;
+
+export interface PromptElementAndProps<T extends PromptElement<any, void>> {
+	promptElement: PromptElementCtor<InferProps<T>, void>;
+	props?: InferProps<T>;
 }
 
 export class ToolUserPrompt extends PromptElement<ToolUserProps, void> {
