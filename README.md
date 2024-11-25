@@ -51,11 +51,11 @@ context.subscriptions.push(myParticipant);
 Here are the options that you can pass to `sendChatParticipantRequest`:
 
 ```ts
-export interface ChatHandlerOptions {
+export interface ChatHandlerOptions<T extends PromptElement = PromptElement> {
 	/**
 	 * Instructions/"personality" for the chat participant prompt. This is what makes this chat participant different from others.
 	 */
-	prompt?: string;
+	prompt?: string | PromptElementAndProps<T>;
 
 	/**
 	 * If not specified, the user-selected model on ChatRequest will be used.
@@ -65,7 +65,7 @@ export interface ChatHandlerOptions {
 	/**
 	 * An optional list of tools to use for this request.
 	 */
-	tools?: ReadonlyArray<vscode.LanguageModelChatTool | AdHocChatTool>;
+	tools?: ReadonlyArray<vscode.LanguageModelChatTool | AdHocChatTool<object>>;
 
 	/**
 	 * See {@link vscode.LanguageModelChatRequestOptions.justification}
