@@ -14,7 +14,6 @@ const TARGET = join(__dirname, '../src/util/vs');
  * Returns the absolute file path where the given file should be placed.
  */
 function determineTargetPath(absoluteVSCodeFilePath: string): string {
-
 	const vsRelative = path.relative(VS_ROOT, absoluteVSCodeFilePath);
 
 	const segements = vsRelative.split(path.sep);
@@ -36,7 +35,6 @@ function createRelativeImportPath(currentFilePath: string, importedFilePath: str
 }
 
 async function doIt(filepaths: string[]) {
-
 	try {
 		await fs.promises.access(VS_ROOT);
 	} catch {
@@ -57,7 +55,6 @@ async function doIt(filepaths: string[]) {
 	const stack = [...filepaths.map(p => join(VS_ROOT, p))];
 
 	while (stack.length > 0) {
-
 		const filepath = stack.pop()!;
 		if (seen.has(filepath)) {
 			continue;
@@ -69,7 +66,6 @@ async function doIt(filepaths: string[]) {
 		const destinationFilePath = determineTargetPath(filepath);
 		const info = ts.preProcessFile(source, true, true);
 		for (const importedFile of info.importedFiles) {
-
 			let absolutePath: string | undefined;
 			if (importedFile.fileName.startsWith('.')) {
 				absolutePath = join(filepath, '..', importedFile.fileName.replace(/\.js$/, '.ts'));
@@ -98,24 +94,25 @@ async function doIt(filepaths: string[]) {
 		if (filepath.endsWith('src/vs/nls.ts')) {
 			newSource = 'declare var document: any;\n\n' + newSource;
 		}
-		newSource = '//!!! DO NOT modify, this file was COPIED from \'microsoft/vscode\'\n\n' + newSource;
+		newSource = "//!!! DO NOT modify, this file was COPIED from 'microsoft/vscode'\n\n" + newSource;
 
 		seen.set(filepath, {
 			sourceFilePath: filepath,
 			targetFilePath: destinationFilePath,
-			contents: newSource
+			contents: newSource,
 		});
 	}
 
 	for (const [_, file] of seen) {
-
 		const targetFilepath = file.targetFilePath;
 
 		await fs.promises.mkdir(join(targetFilepath, '..'), { recursive: true });
 		await fs.promises.writeFile(targetFilepath, file.contents);
 	}
 
-	console.log(`✅ done, copied ${filepaths.length} files and ${seen.size - filepaths.length} dependencies`);
+	console.log(
+		`✅ done, copied ${filepaths.length} files and ${seen.size - filepaths.length} dependencies`,
+	);
 }
 
 doIt([
@@ -124,7 +121,6 @@ doIt([
 	// run `npx tsx script/setup/copySources.ts`
 	// ********************************************
 	// e.g. 'vs/base/common/async.ts',
-
 ]).catch(err => {
 	console.error(err);
 });
