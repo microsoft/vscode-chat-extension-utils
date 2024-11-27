@@ -123,12 +123,8 @@ doIt([
 	// add modules from `base` here and
 	// run `npx tsx script/setup/copySources.ts`
 	// ********************************************
-	'vs/base/common/async.ts',
+	// e.g. 'vs/base/common/async.ts',
 
-	// SPECIAL IMPLICIT DEPENDENCIES
-	'typings/vscode-globals-nls.d.ts',
-	'typings/vscode-globals-product.d.ts',
-	'typings/base-common.d.ts',
 ]).catch(err => {
 	console.error(err);
 });
