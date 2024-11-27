@@ -1,19 +1,10 @@
 {
-	"exclude": [
-		"script",
-	],
-	"include": [
-		"src"
-	],
+	"exclude": ["script"],
+	"include": ["src"],
 	"compilerOptions": {
 		"target": "es2022",
 		"useDefineForClassFields": false,
-		"lib": [
-			"ES2022",
-			"DOM",
-			"DOM.Iterable",
-			"WebWorker.ImportScripts"
-		],
+		"lib": ["ES2022", "WebWorker.ImportScripts"],
 		"experimentalDecorators": true,
 		"noImplicitReturns": true,
 		"noImplicitOverride": true,
@@ -24,7 +15,6 @@
 		"useUnknownInCatchVariables": false,
 		"forceConsistentCasingInFileNames": true,
 
-
 		"module": "commonjs",
 		"outDir": "dist",
 		"rootDir": "src",
@@ -33,9 +23,6 @@
 		"declaration": true,
 		"jsxFragmentFactory": "vscppf",
 		"moduleResolution": "node",
-		"types": [
-			"node",
-			"mocha"
-		]
+		"types": ["node", "mocha"]
 	}
 }
