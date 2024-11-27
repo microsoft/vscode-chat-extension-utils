@@ -3,9 +3,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { PromptElement, renderPrompt } from '@vscode/prompt-tsx';
+import type { ReadableStreamController } from 'stream/web';
 import * as vscode from 'vscode';
-import { AdHocChatTool, PromptElementAndProps, ToolCallRound, ToolResultMetadata, ToolUserPrompt, TsxToolUserMetadata } from './toolsPrompt';
-import { AsyncIterableSource } from './util/vs/base/common/async';
+import {
+	AdHocChatTool,
+	PromptElementAndProps,
+	ToolCallRound,
+	ToolResultMetadata,
+	ToolUserPrompt,
+	TsxToolUserMetadata,
+} from './toolsPrompt';
 
 // export function replacePattern(textStream: AsyncIterable<string>, pattern: RegExp, replacement: string): AsyncIterable<string>;
 // export function handlePattern(textStream: AsyncIterable<string>, pattern: RegExp, patternHandler: (match: string) => void): AsyncIterable<string>;
@@ -52,24 +59,42 @@ export interface ChatHandlerResult {
 /**
  * Send a chat request, do the tool calling loop if needed, and return a stream and a ChatResult. Caller handles the response stream.
  */
-export function sendChatParticipantRequest(request: vscode.ChatRequest, context: vscode.ChatContext, options: ChatHandlerOptions, token: vscode.CancellationToken): ChatHandlerResult {
-	const stream = new AsyncIterableSource<vscode.LanguageModelTextPart | vscode.LanguageModelToolResult>();
-	const resultPromise = _sendChatParticipantRequest(stream, request, context, options, token)
-		.finally(() => stream.resolve());
+export function sendChatParticipantRequest(
+	request: vscode.ChatRequest,
+	context: vscode.ChatContext,
+	options: ChatHandlerOptions,
+	token: vscode.CancellationToken,
+): ChatHandlerResult {
+	let promise: Promise<vscode.ChatResult>;
+
+	const readable = new ReadableStream<
+		vscode.LanguageModelTextPart | vscode.LanguageModelToolResult
+	>({
+		start(controller) {
+			promise = _sendChatParticipantRequest(controller, request, context, options, token);
+			return promise;
+		},
+	});
 
 	return {
-		result: resultPromise,
-		stream: stream.asyncIterable,
+		result: promise!,
+		stream: readable,
 	};
 }
 
-async function _sendChatParticipantRequest(stream: AsyncIterableSource<vscode.LanguageModelTextPart | vscode.LanguageModelToolResult>, request: vscode.ChatRequest, context: vscode.ChatContext, options: ChatHandlerOptions, token: vscode.CancellationToken): Promise<vscode.ChatResult> {
+async function _sendChatParticipantRequest(
+	stream: ReadableStreamController<vscode.LanguageModelTextPart | vscode.LanguageModelToolResult>,
+	request: vscode.ChatRequest,
+	context: vscode.ChatContext,
+	options: ChatHandlerOptions,
+	token: vscode.CancellationToken,
+): Promise<vscode.ChatResult> {
 	let model = options.model ?? request.model;
 	if (options.tools?.length && model.vendor === 'copilot' && model.family.startsWith('o1')) {
 		// The o1 models do not currently support tools
 		const models = await vscode.lm.selectChatModels({
 			vendor: 'copilot',
-			family: 'gpt-4o'
+			family: 'gpt-4o',
 		});
 		model = models[0];
 	}
@@ -89,10 +114,11 @@ async function _sendChatParticipantRequest(stream: AsyncIterableSource<vscode.La
 			toolCallRounds: [],
 			toolCallResults: {},
 			libUserPrompt: options.prompt,
-			tools
+			tools,
 		},
 		{ modelMaxPromptTokens: model.maxInputTokens },
-		model);
+		model,
+	);
 	let messages = result.messages;
 	result.references.forEach(ref => {
 		if (ref.anchor instanceof vscode.Uri || ref.anchor instanceof vscode.Location) {
@@ -124,7 +150,7 @@ async function _sendChatParticipantRequest(stream: AsyncIterableSource<vscode.La
 		let responseStr = '';
 		for await (const part of response.stream) {
 			if (part instanceof vscode.LanguageModelTextPart) {
-				stream.emitOne(part);
+				stream.enqueue(part);
 				responseStr += part.value;
 
 				if (options.responseStreamOptions?.responseText) {
@@ -140,9 +166,9 @@ async function _sendChatParticipantRequest(stream: AsyncIterableSource<vscode.La
 			// and include the tool results in the prompt for the next request.
 			toolCallRounds.push({
 				response: responseStr,
-				toolCalls
+				toolCalls,
 			});
-			const result = (await renderPrompt(
+			const result = await renderPrompt(
 				ToolUserPrompt,
 				{
 					context,
@@ -150,15 +176,16 @@ async function _sendChatParticipantRequest(stream: AsyncIterableSource<vscode.La
 					toolCallRounds,
 					toolCallResults: accumulatedToolResults,
 					libUserPrompt: options.prompt,
-					tools
+					tools,
 				},
 				{ modelMaxPromptTokens: model.maxInputTokens },
-				model));
+				model,
+			);
 			messages = result.messages;
 			const toolResultMetadata = result.metadata.getAll(ToolResultMetadata);
 			if (toolResultMetadata?.length) {
 				// Cache tool results for later, so they can be incorporated into later prompts without calling the tool again
-				toolResultMetadata.forEach(meta => accumulatedToolResults[meta.toolCallId] = meta.result);
+				toolResultMetadata.forEach(meta => (accumulatedToolResults[meta.toolCallId] = meta.result));
 			}
 
 			// This loops until the model doesn't want to call any more tools, then the request is done.
@@ -173,8 +200,8 @@ async function _sendChatParticipantRequest(stream: AsyncIterableSource<vscode.La
 			// Return tool call metadata so it can be used in prompt history on the next request
 			toolCallsMetadata: {
 				toolCallResults: accumulatedToolResults,
-				toolCallRounds
-			}
+				toolCallRounds,
+			},
 		} satisfies TsxToolUserMetadata,
 	};
 }
