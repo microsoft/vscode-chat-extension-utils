@@ -9,7 +9,7 @@ header.rules.header.meta.schema = false;
 
 export default tseslint.config({
 	files: ['src/**/*.ts*'],
-	ignores: [],
+	ignores: ['src/util/vs/**'],
 	plugins: {
 		'@typescript-eslint': tseslint.plugin,
 		header: header,

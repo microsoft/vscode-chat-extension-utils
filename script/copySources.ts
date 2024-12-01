@@ -121,10 +121,9 @@ async function doIt(filepaths: string[]) {
 doIt([
 	// ********************************************
 	// add modules from `base` here and
-	// run `npx tsx script/setup/copySources.ts`
+	// run `npx tsx script/copySources.ts`
 	// ********************************************
-	// e.g. 'vs/base/common/async.ts',
-
+	'vs/base/common/lazy.ts',
 ]).catch(err => {
 	console.error(err);
 });
