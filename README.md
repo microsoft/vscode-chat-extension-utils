@@ -81,5 +81,12 @@ export interface ChatHandlerOptions<T extends PromptElement = PromptElement> {
 		references?: boolean;
 		responseText?: boolean;
 	};
+
+	/**
+	 * If you provide this from {@link vscode.ExtensionContext}, then a trace of the rendered prompt will be served.
+	 * If {@link ChatHandlerOptions.responseStreamOptions.stream} is provided, a link to the trace will be added to the response.
+	 * Otherwise, the link will be logged to the console.
+	 */
+	extensionMode?: vscode.ExtensionMode;
 }
 ```
