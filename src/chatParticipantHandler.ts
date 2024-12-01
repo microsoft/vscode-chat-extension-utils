@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation and GitHub. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
-import { PromptElement, renderPrompt } from '@vscode/prompt-tsx';
+import { ChatMessage, HTMLTracer, PromptElement, PromptRenderer, toVsCodeChatMessages } from '@vscode/prompt-tsx';
 import type { ReadableStreamController } from 'stream/web';
 import * as vscode from 'vscode';
 import {
@@ -10,7 +10,7 @@ import {
 	PromptElementAndProps,
 	ToolCallRound,
 	ToolResultMetadata,
-	ToolUserPrompt,
+	ToolUserPrompt, ToolUserProps,
 	TsxToolUserMetadata,
 } from './toolsPrompt';
 
@@ -49,6 +49,13 @@ export interface ChatHandlerOptions<T extends PromptElement = PromptElement> {
 		references?: boolean;
 		responseText?: boolean;
 	};
+
+	/**
+	 * If you provide this from {@link vscode.ExtensionContext}, then a trace of the rendered prompt will be served.
+	 * If {@link ChatHandlerOptions.responseStreamOptions.stream} is provided, a link to the trace will be added to the response.
+	 * Otherwise, the link will be logged to the console.
+	 */
+	extensionMode?: vscode.ExtensionMode;
 }
 
 export interface ChatHandlerResult {
@@ -106,8 +113,8 @@ async function _sendChatParticipantRequest(
 	};
 
 	// Render the initial prompt
-	const result = await renderPrompt(
-		ToolUserPrompt,
+	const result = await renderToolUserPrompt(
+		model,
 		{
 			context,
 			request,
@@ -116,10 +123,9 @@ async function _sendChatParticipantRequest(
 			libUserPrompt: options.prompt,
 			tools,
 		},
-		{ modelMaxPromptTokens: model.maxInputTokens },
-		model,
-	);
-	let messages = result.messages;
+		options.responseStreamOptions?.stream,
+		options.extensionMode === vscode.ExtensionMode.Development);
+	let messages = toVsCodeChatMessages(result.messages);
 	result.references.forEach(ref => {
 		if (ref.anchor instanceof vscode.Uri || ref.anchor instanceof vscode.Location) {
 			if (options.responseStreamOptions?.references) {
@@ -168,8 +174,8 @@ async function _sendChatParticipantRequest(
 				response: responseStr,
 				toolCalls,
 			});
-			const result = await renderPrompt(
-				ToolUserPrompt,
+			const result = await renderToolUserPrompt(
+				model,
 				{
 					context,
 					request,
@@ -178,10 +184,9 @@ async function _sendChatParticipantRequest(
 					libUserPrompt: options.prompt,
 					tools,
 				},
-				{ modelMaxPromptTokens: model.maxInputTokens },
-				model,
-			);
-			messages = result.messages;
+				options.responseStreamOptions?.stream,
+				options.extensionMode === vscode.ExtensionMode.Development);
+			messages = toVsCodeChatMessages(result.messages);
 			const toolResultMetadata = result.metadata.getAll(ToolResultMetadata);
 			if (toolResultMetadata?.length) {
 				// Cache tool results for later, so they can be incorporated into later prompts without calling the tool again
@@ -204,4 +209,30 @@ async function _sendChatParticipantRequest(
 			},
 		} satisfies TsxToolUserMetadata,
 	};
+}
+
+async function renderToolUserPrompt(chat: vscode.LanguageModelChat, props: ToolUserProps, stream: vscode.ChatResponseStream | undefined, serveTrace: boolean) {
+	const renderer = new PromptRenderer({ modelMaxPromptTokens: chat.maxInputTokens }, ToolUserPrompt, props, {
+		tokenLength: async (text, _token) => {
+			return chat.countTokens(text);
+		},
+		countMessageTokens: async (message: ChatMessage) => {
+			return chat.countTokens(message.content);
+		}
+	});
+	const tracer = new HTMLTracer();
+	renderer.tracer = tracer;
+	const result = await renderer.render();
+	if (serveTrace) {
+		const server = await tracer.serveHTML();
+		if (stream) {
+			const md = new vscode.MarkdownString('$(info) [View prompt trace](' + server.address + ')');
+			md.supportThemeIcons = true;
+			stream.markdown(md);
+		} else {
+			console.log('Prompt trace address:', server.address);
+		}
+	}
+
+	return result;
 }
