@@ -5,6 +5,10 @@ trigger:
     include:
       - main
 
+pr:
+- main
+- release/*
+
 resources:
   repositories:
     - repository: templates
