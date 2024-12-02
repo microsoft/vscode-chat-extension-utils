@@ -23,17 +23,6 @@ export default tseslint.config({
 		},
 	},
 	rules: {
-		indent: [
-			'error',
-			'tab',
-			{
-				ignoredNodes: [
-					'SwitchCase',
-					'ClassDeclaration',
-					'TemplateLiteral *', // Conflicts with tsfmt
-				],
-			},
-		],
 		'constructor-super': 'error',
 		curly: 'error',
 		eqeqeq: 'error',
