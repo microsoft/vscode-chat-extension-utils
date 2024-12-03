@@ -2,7 +2,13 @@
  *  Copyright (c) Microsoft Corporation and GitHub. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
-import { ChatMessage, HTMLTracer, PromptElement, PromptRenderer, toVsCodeChatMessages } from '@vscode/prompt-tsx';
+import {
+	ChatMessage,
+	HTMLTracer,
+	PromptElement,
+	PromptRenderer,
+	toVsCodeChatMessages,
+} from '@vscode/prompt-tsx';
 import type { ReadableStreamController } from 'stream/web';
 import * as vscode from 'vscode';
 import {
@@ -10,7 +16,8 @@ import {
 	PromptElementAndProps,
 	ToolCallRound,
 	ToolResultMetadata,
-	ToolUserPrompt, ToolUserProps,
+	ToolUserPrompt,
+	ToolUserProps,
 	TsxToolUserMetadata,
 } from './toolsPrompt';
 
@@ -124,7 +131,8 @@ async function _sendChatParticipantRequest(
 			tools,
 		},
 		options.responseStreamOptions?.stream,
-		options.extensionMode === vscode.ExtensionMode.Development);
+		options.extensionMode === vscode.ExtensionMode.Development,
+	);
 	let messages = toVsCodeChatMessages(result.messages);
 	result.references.forEach(ref => {
 		if (ref.anchor instanceof vscode.Uri || ref.anchor instanceof vscode.Location) {
@@ -185,7 +193,8 @@ async function _sendChatParticipantRequest(
 					tools,
 				},
 				options.responseStreamOptions?.stream,
-				options.extensionMode === vscode.ExtensionMode.Development);
+				options.extensionMode === vscode.ExtensionMode.Development,
+			);
 			messages = toVsCodeChatMessages(result.messages);
 			const toolResultMetadata = result.metadata.getAll(ToolResultMetadata);
 			if (toolResultMetadata?.length) {
@@ -211,15 +220,25 @@ async function _sendChatParticipantRequest(
 	};
 }
 
-async function renderToolUserPrompt(chat: vscode.LanguageModelChat, props: ToolUserProps, stream: vscode.ChatResponseStream | undefined, serveTrace: boolean) {
-	const renderer = new PromptRenderer({ modelMaxPromptTokens: chat.maxInputTokens }, ToolUserPrompt, props, {
-		tokenLength: async (text, _token) => {
-			return chat.countTokens(text);
+async function renderToolUserPrompt(
+	chat: vscode.LanguageModelChat,
+	props: ToolUserProps,
+	stream: vscode.ChatResponseStream | undefined,
+	serveTrace: boolean,
+) {
+	const renderer = new PromptRenderer(
+		{ modelMaxPromptTokens: chat.maxInputTokens },
+		ToolUserPrompt,
+		props,
+		{
+			tokenLength: async (text, _token) => {
+				return chat.countTokens(text);
+			},
+			countMessageTokens: async (message: ChatMessage) => {
+				return chat.countTokens(message.content);
+			},
 		},
-		countMessageTokens: async (message: ChatMessage) => {
-			return chat.countTokens(message.content);
-		}
-	});
+	);
 	const tracer = new HTMLTracer();
 	renderer.tracer = tracer;
 	const result = await renderer.render();

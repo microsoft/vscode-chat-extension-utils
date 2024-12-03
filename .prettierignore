@@ -5,3 +5,4 @@ dist/**
 SECURITY.md
 SUPPORT.md
 *.md
+src/util
