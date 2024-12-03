@@ -1,7 +1,7 @@
 import { defineConfig } from '@vscode/test-cli';
 
 export default defineConfig({
-	files: 'dist/**/*.test.js',
+	files: 'dist/test/**/*.js',
 	version: 'insiders',
 	launchArgs: ['--disable-extensions', '--profile-temp'],
 	mocha: {

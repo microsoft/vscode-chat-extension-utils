@@ -6,8 +6,8 @@ trigger:
       - main
 
 pr:
-- main
-- release/*
+  - main
+  - release/*
 
 resources:
   repositories:

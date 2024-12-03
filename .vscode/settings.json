@@ -8,5 +8,8 @@
 	"editor.formatOnSave": true,
 	"search.exclude": {
 		"dist": true
+	},
+	"files.readonlyInclude": {
+		"src/util/**": true
 	}
 }
