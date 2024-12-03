@@ -90,3 +90,17 @@ export interface ChatHandlerOptions<T extends PromptElement = PromptElement> {
 	extensionMode?: vscode.ExtensionMode;
 }
 ```
+
+## Development
+
+When working on the library itself, you may want to use the local version in a chat extension. To do this you can use `npm link`:
+
+- In this repository, run `npm link`.
+- In the chat extension repository, run `npm link @vscode/chat-extension-utils`.
+- But if your chat extension uses `@vscode/prompt-tsx`, there's a problem: that library uses `instanceof` checks on prompt elements, but there are two copies of the library in play, breaking this. To work around that, you can import the prompt element types from `@vscode/chat-extension-utils` instead of `@vscode/prompt-tsx` in your chat extension:
+
+```ts
+import { UserMessage } from '@vscode/chat-extension-utils/dist/promptTsx';
+```
+
+Note that this won't work with a published version of the library, so revert it before pushing the changes to your extension!
