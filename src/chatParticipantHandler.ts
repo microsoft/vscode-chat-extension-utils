@@ -85,7 +85,8 @@ export function sendChatParticipantRequest(
 		vscode.LanguageModelTextPart | vscode.LanguageModelToolResult
 	>({
 		start(controller) {
-			promise = _sendChatParticipantRequest(controller, request, context, options, token);
+			promise = _sendChatParticipantRequest(controller, request, context, options, token)
+				.finally(() => controller.close());
 			return promise;
 		},
 	});
