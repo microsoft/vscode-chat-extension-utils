@@ -1,7 +1,7 @@
 {
 	"name": "@vscode/chat-extension-utils",
 	"description": "A library for implementing VS Code chat participant extensions.",
-	"version": "0.0.0-alpha.2",
+	"version": "0.0.0-alpha.3",
 	"author": "Microsoft Corporation",
 	"license": "MIT",
 	"main": "./dist/index.js",
