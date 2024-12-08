@@ -21,10 +21,6 @@ import {
 	TsxToolUserMetadata,
 } from './toolsPrompt';
 
-// export function replacePattern(textStream: AsyncIterable<string>, pattern: RegExp, replacement: string): AsyncIterable<string>;
-// export function handlePattern(textStream: AsyncIterable<string>, pattern: RegExp, patternHandler: (match: string) => void): AsyncIterable<string>;
-// export function streamPatternMatcher(textStream: AsyncIterable<string>, pattern: RegExp): AsyncIterable<{ text: string } | { match: RegExpMatchArray }>;
-
 // ❗ This needs to be updated in README when changing.
 export interface ChatHandlerOptions<T extends PromptElement = PromptElement> {
 	/**
@@ -48,25 +44,55 @@ export interface ChatHandlerOptions<T extends PromptElement = PromptElement> {
 	requestJustification?: string;
 
 	/**
-	 * sendChatParticipantRequest returns a response stream, and the caller can handle streaming the response,
-	 * or use this option to enable sendChatParticipantRequest to stream the response back to VS Code.
+	 * sendChatParticipantRequest returns a response stream, and the caller can handle streaming the response, or this option can
+	 * be used to enable sendChatParticipantRequest to stream the response back to VS Code. In that case, the chat participant
+	 * code doesn't have to handle the stream to return a chat response to VS Code.
 	 */
 	responseStreamOptions?: {
+		/**
+		 * The chat participant's stream, passed to the {@link vscode.ChatRequestHandler}.
+		 */
 		stream: vscode.ChatResponseStream;
+
+		/**
+		 * If true, sendChatParticipantRequest will automatically send references to the response stream.
+		 * @see {@link vscode.ChatResponseReferencePart}.
+		 */
 		references?: boolean;
+
+		/**
+		 * If true, sendChatParticipantRequest will automatically send the text response to the response stream.
+		 * @see {@link vscode.ChatResponseMarkdownPart}.
+		 */
 		responseText?: boolean;
 	};
 
 	/**
-	 * If you provide this from {@link vscode.ExtensionContext}, then a trace of the rendered prompt will be served.
-	 * If {@link ChatHandlerOptions.responseStreamOptions.stream} is provided, a link to the trace will be added to the response.
-	 * Otherwise, the link will be logged to the console.
+	 * Provide this from {@link vscode.ExtensionContext} so that sendChatParticipantRequest can check whether your extension is
+	 * running in debug mode. If it is, then a trace of the rendered prompt will be served. This trace is useful for seeing the
+	 * final prompt and understanding how it was rendered.
+	 *
+	 * If {@link ChatHandlerOptions.responseStreamOptions.stream} is also provided, a link to the trace will be added to the
+	 * response. Otherwise, the link to the trace will be logged to the console.
 	 */
 	extensionMode?: vscode.ExtensionMode;
 }
 
+/**
+ * The result of sendChatParticipantRequest.
+ */
 export interface ChatHandlerResult {
+	/**
+	 * This is the ChatResult, which must be returned from the chat participant handler because it may contain error message
+	 * details or tool calling metadata.
+	 */
 	result: Promise<vscode.ChatResult>;
+
+	/**
+	 * This is a stream of the result text, and the results of tool calls. If
+	 * {@link ChatHandlerOptions.responseStreamOptions.responseText} is used, then this stream can be ignored. If not, then you
+	 * likely want to read this stream and send the text response back to VS Code via {@link vscode.ChatResponseStream}.
+	 */
 	stream: AsyncIterable<vscode.LanguageModelTextPart | vscode.LanguageModelToolResult>;
 }
 
@@ -85,8 +111,9 @@ export function sendChatParticipantRequest(
 		vscode.LanguageModelTextPart | vscode.LanguageModelToolResult
 	>({
 		start(controller) {
-			promise = _sendChatParticipantRequest(controller, request, context, options, token)
-				.finally(() => controller.close());
+			promise = _sendChatParticipantRequest(controller, request, context, options, token).finally(
+				() => controller.close(),
+			);
 			return promise;
 		},
 	});
