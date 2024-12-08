@@ -83,19 +83,36 @@ export interface ChatHandlerOptions<T extends PromptElement = PromptElement> {
 	requestJustification?: string;
 
 	/**
-	 * sendChatParticipantRequest returns a response stream, and the caller can handle streaming the response,
-	 * or use this option to enable sendChatParticipantRequest to stream the response back to VS Code.
+	 * sendChatParticipantRequest returns a response stream, and the caller can handle streaming the response, or this option can
+	 * be used to enable sendChatParticipantRequest to stream the response back to VS Code. In that case, the chat participant
+	 * code doesn't have to handle the stream to return a chat response to VS Code.
 	 */
 	responseStreamOptions?: {
+		/**
+		 * The chat participant's stream, passed to the {@link vscode.ChatRequestHandler}.
+		 */
 		stream: vscode.ChatResponseStream;
+
+		/**
+		 * If true, sendChatParticipantRequest will automatically send references to the response stream.
+		 * @see {@link vscode.ChatResponseReferencePart}.
+		 */
 		references?: boolean;
+
+		/**
+		 * If true, sendChatParticipantRequest will automatically send the text response to the response stream.
+		 * @see {@link vscode.ChatResponseMarkdownPart}.
+		 */
 		responseText?: boolean;
 	};
 
 	/**
-	 * If you provide this from {@link vscode.ExtensionContext}, then a trace of the rendered prompt will be served.
-	 * If {@link ChatHandlerOptions.responseStreamOptions.stream} is provided, a link to the trace will be added to the response.
-	 * Otherwise, the link will be logged to the console.
+	 * Provide this from {@link vscode.ExtensionContext} so that sendChatParticipantRequest can check whether your extension is
+	 * running in debug mode. If it is, then a trace of the rendered prompt will be served. This trace is useful for seeing the
+	 * final prompt and understanding how it was rendered.
+	 *
+	 * If {@link ChatHandlerOptions.responseStreamOptions.stream} is also provided, a link to the trace will be added to the
+	 * response. Otherwise, the link to the trace will be logged to the console.
 	 */
 	extensionMode?: vscode.ExtensionMode;
 }
