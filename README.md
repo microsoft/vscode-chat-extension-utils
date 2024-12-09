@@ -359,3 +359,5 @@ import { UserMessage } from '@vscode/chat-extension-utils/dist/promptTsx';
 ```
 
 Note that this won't work with a published version of the library, so revert it before pushing the changes to your extension!
+
+TEST
