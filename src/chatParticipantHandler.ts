@@ -203,13 +203,13 @@ async function _sendChatParticipantRequest(
 			}
 		}
 
+		toolCallRounds.push({
+			response: responseStr,
+			toolCalls,
+		});
 		if (toolCalls.length) {
 			// If the model called any tools, then we do another round- render the prompt with those tool calls (rendering the PromptElements will invoke the tools)
 			// and include the tool results in the prompt for the next request.
-			toolCallRounds.push({
-				response: responseStr,
-				toolCalls,
-			});
 			const result = await renderToolUserPrompt(
 				model,
 				{
