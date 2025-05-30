@@ -1,7 +1,7 @@
 {
 	"name": "@vscode/chat-extension-utils",
 	"description": "A library for implementing VS Code chat participant extensions.",
-	"version": "0.0.0-alpha.5",
+	"version": "0.0.0-alpha.6",
 	"author": "Microsoft Corporation",
 	"license": "MIT",
 	"main": "./dist/index.js",
@@ -24,7 +24,7 @@
 	},
 	"homepage": "https://github.com/microsoft/vscode-chat-extension-utils#readme",
 	"dependencies": {
-		"@vscode/prompt-tsx": "^0.3.0-alpha.14"
+		"@vscode/prompt-tsx": "^0.4.0-alpha.4"
 	},
 	"devDependencies": {
 		"@stylistic/eslint-plugin-ts": "^2.10.1",
