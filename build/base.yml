@@ -26,6 +26,7 @@ parameters:
 extends:
   template: azure-pipelines/npm-package/pipeline.yml@templates
   parameters:
+    cgIgnoreDirectories: .vscode-test
     npmPackages:
       - name: chat-extension-utils
 
